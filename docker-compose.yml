@@ -23,3 +23,20 @@ services:
 
 volumes:
   db_data:
+
+
+  wppconnect-server:
+    image: ghcr.io/wppconnect-team/wppconnect-server:latest
+    container_name: wppconnect-server
+    restart: unless-stopped
+    ports:
+      - "21465:21465"
+    volumes:
+      - tokens:/usr/src/app/tokens
+      - userdata:/usr/src/app/userDataDir
+    depends_on: [wpp-db-server]
+
+volumes:
+  db_data:
+  tokens:
+  userdata:
