@@ -49,7 +49,7 @@ services:
       - "3005:3005"
     networks: [backend]
 
-    wppconnect-server:
+  wppconnect-server:
     build:
       context: ./wppconnect-server
     container_name: wppconnect-server
