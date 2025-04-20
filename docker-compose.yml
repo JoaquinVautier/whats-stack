@@ -3,6 +3,7 @@ version: "3.9"
 services:
   db:
     image: mysql:8
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: wpp_db
@@ -10,31 +11,47 @@ services:
       MYSQL_PASSWORD: wpp_pass
     volumes:
       - db_data:/var/lib/mysql
+    networks: [backend]
 
   wpp-db-server:
     build: ./wpp-db-server
+    restart: unless-stopped
     depends_on: [db]
+    ports:
+      - "3001:3001"
+    networks: [backend]
 
   wpp-webhook:
     build: ./wpp-webhook
-
-    build: ./wpp-frontend
+    restart: unless-stopped
     depends_on: [wpp-db-server]
-
-volumes:
-  db_data:
-
+    ports:
+      - "3005:3005"
+    networks: [backend]
 
   wppconnect-server:
     image: ghcr.io/wppconnect-team/wppconnect-server:latest
     container_name: wppconnect-server
     restart: unless-stopped
+    depends_on: [wpp-db-server]
     ports:
       - "21465:21465"
     volumes:
       - tokens:/usr/src/app/tokens
       - userdata:/usr/src/app/userDataDir
+    networks: [backend]
+
+  frontend:
+    build: ./wpp-frontend
+    restart: unless-stopped
     depends_on: [wpp-db-server]
+    ports:
+      - "3000:80"
+    networks: [frontend]
+
+networks:
+  backend:
+  frontend:
 
 volumes:
   db_data:
