@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wpp_db
+      MYSQL_USER: wpp_user
+      MYSQL_PASSWORD: wpp_pass
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wpp-db-server:
+    build: ./wpp-db-server
+    depends_on: [db]
+
+  wpp-webhook:
+    build: ./wpp-webhook
+
+  wppconnect-server:
+    build: ./wppconnect-server
+    depends_on: [wpp-db-server]
+
+  frontend:
+    build: ./wpp-frontend
+    depends_on: [wpp-db-server]
+
+volumes:
+  db_data:
