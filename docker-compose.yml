@@ -2,7 +2,12 @@ version: "3.9"
 
 services:
   db:
-    image: mysql:8
+    image: mysql:8.0
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -16,7 +21,17 @@ services:
   wpp-db-server:
     build: ./wpp-db-server
     restart: unless-stopped
-    depends_on: [db]
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: wpp_user
+      DB_PASS: wpp_pass
+      DB_NAME: wpp_db
+      WPP_API_URL: http://wppconnect-server:21465
+      WPP_SERVER_HOST=: http://wppconnect-server:21465
+      WEBHOOK_URL=: http://wpp-webhook:3005/wpp-webhook
+    depends_on:         # ← amplía
+      - db
     ports:
       - "3001:3001"
     networks: [backend]
@@ -57,7 +72,9 @@ services:
     depends_on: [wpp-db-server]
     ports:
       - "3000:80"
-    networks: [frontend]
+    networks:
+    - frontend      # <- ya estaba
+    - backend       # <- AÑADIR
 
 networks:
   backend:

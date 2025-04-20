@@ -5,3 +5,17 @@ wpp-frontend/build/
 WhatsAppImages/
 backup_*.zip
 *.env
+# ─── Contenedores / volúmenes ───────────────────────────
+tokens/
+userdata/
+**/node_modules/
+logs/
+*.log
+# IDE / SO
+.DS_Store
+
+# ─── backups / temporales ────────────────────────────────
+*.bak
+*.old
+# ─── raíz que no subimos ─────────────────────────────────
+/Dockerfile        # si no se usa

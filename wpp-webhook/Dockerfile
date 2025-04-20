@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 3005
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "webhook.js"]
+CMD ["node", "server.js"]

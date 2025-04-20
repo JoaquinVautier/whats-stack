@@ -12,10 +12,10 @@ const bodyParser = require('body-parser');
 
 /* ---------- CONFIG DB ---------- */
 const pool = mysql.createPool({
-  host              : '127.0.0.1',
-  user              : 'wpp_user',
-  password          : 'StrongPass123_',
-  database          : 'wpp_db',
+  host              : process.env.DB_HOST || 'db',
+  user              : process.env.DB_USER || 'wpp_user',
+  password          : process.env.DB_PASS || 'wpp_pass',
+  database          : process.env.DB_NAME || 'wpp_db',
   waitForConnections: true,
   connectionLimit   : 10
 });
@@ -23,9 +23,9 @@ const queryDB = (sql, p = []) =>
   new Promise((ok, fail) => pool.query(sql, p, (e, r) => (e ? fail(e) : ok(r))));
 
 /* ---------- CONFIG WPP ---------- */
-const WPP_SERVER_HOST = 'http://212.85.2.12:21465';
+const WPP_SERVER_HOST = 'http://wppconnect-server:21465';
 const SECRET_KEY      = 'THISISMYSECURETOKEN';
-const WEBHOOK_URL     = 'http://212.85.2.12:3005/wpp-webhook';
+const WEBHOOK_URL     = 'http://wpp-webhook:3005/wpp-webhook';
 
 /* ---------- helper: token ---------- */
 async function generateTokenIfNeeded(chan) {

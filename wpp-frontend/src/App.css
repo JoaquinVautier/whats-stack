@@ -1,38 +1,203 @@
-.App {
-  text-align: center;
+/* -------------------------
+   RESET / BASE STYLES
+------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body {
+  background-color: #f4f6f8;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* -------------------------
+   APP CONTAINER
+------------------------- */
+.app-container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+}
+
+/* -------------------------
+   HEADER
+------------------------- */
+.header {
+  background-color: #2F3A46;
+  color: #fff;
+  padding: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+/* -------------------------
+   CONTENT
+------------------------- */
+.content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------
+   CREATE CHANNEL FORM
+------------------------- */
+.create-channel-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.create-channel-form input {
+  flex: 1 1 auto;
+  min-width: 150px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.create-channel-form button {
+  background-color: #0077B6;
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* -------------------------
+   CHANNELS GRID (CARDS)
+------------------------- */
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.channel-card {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.channel-card-header {
+  background-color: #f5f7f9;
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.channel-card-body {
+  flex: 1;
+  padding: 12px;
+}
+
+.channel-card-body p {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.status-connected {
+  color: #2CA45E; /* verde */
+  font-weight: bold;
+}
+
+.channel-card-footer {
+  border-top: 1px solid #ddd;
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* -------------------------
+   BUTTONS
+------------------------- */
+.btn {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-blue {
+  background-color: #0077B6;
+  color: #fff;
+}
+
+.btn-yellow {
+  background-color: #FFD60A;
+  color: #333;
+}
+
+.btn-red {
+  background-color: #E63946;
+  color: #fff;
+}
+
+/* -------------------------
+   MODAL
+------------------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  position: relative;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.modal-content h2 {
+  margin-bottom: 16px;
 }
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  border: none;
+  background: transparent;
+}
+
+.modal-spinner {
+  width: 64px;
+  margin: 16px auto;
+}
+
+.qr-image {
+  margin-top: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-width: 100%;
+}
+
