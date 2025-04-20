@@ -49,8 +49,9 @@ services:
       - "3005:3005"
     networks: [backend]
 
-  wppconnect-server:
-    image: wppconnectteam/wppconnect-server:latest   # opción A
+    wppconnect-server:
+    build:
+      context: ./wppconnect-server
     container_name: wppconnect-server
     restart: unless-stopped
     ports:
@@ -59,6 +60,7 @@ services:
       - tokens:/usr/src/app/tokens
       - userdata:/usr/src/app/userDataDir
     networks: [backend]
+
 
   frontend:
     build:
