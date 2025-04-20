@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0.41       # misma que tu VPS
+    container_name: wpp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass!123        # ⇦ cámbialo
+      MYSQL_DATABASE: wpp_db
+      MYSQL_USER: wpp_user
+      MYSQL_PASSWORD: StrongPass123_           # ⇦ cámbialo
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+    networks: [backend]
+
+  wpp-db-server:
+    build:
+      context: ./wpp-db-server
+    container_name: wpp-db-server
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: wpp_db
+      DB_USER: wpp_user
+      DB_PASS: StrongPass123_
+      TZ: America/Argentina/Buenos_Aires
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend]
+
+  wpp-webhook:
+    build:
+      context: ./wpp-webhook
+    container_name: wpp-webhook
+    restart: unless-stopped
+    environment:
+      PORT: 3005
+      TZ: America/Argentina/Buenos_Aires
+    ports:
+      - "3005:3005"
+    networks: [backend]
+
+  wppconnect-server:
+    image: wppconnectteam/wppconnect-server:latest   # opción A
+    container_name: wppconnect-server
+    restart: unless-stopped
+    ports:
+      - "21465:21465"
+    volumes:
+      - tokens:/usr/src/app/tokens
+      - userdata:/usr/src/app/userDataDir
+    networks: [backend]
+
+  frontend:
+    build:
+      context: ./wpp-frontend
+    container_name: wpp-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - wpp-db-server
+    networks: [frontend]
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  db_data:
+  tokens:
+  userdata:
+
