@@ -30,15 +30,25 @@ services:
     networks: [backend]
 
   wppconnect-server:
-    image: ghcr.io/wppconnect-team/wppconnect-server:latest
+
+    build: ./wppconnect-server
+
     container_name: wppconnect-server
+
     restart: unless-stopped
+
     depends_on: [wpp-db-server]
+
     ports:
+
       - "21465:21465"
+
     volumes:
+
       - tokens:/usr/src/app/tokens
+
       - userdata:/usr/src/app/userDataDir
+
     networks: [backend]
 
   frontend:
