@@ -30,6 +30,9 @@ services:
       WPP_API_URL: http://wppconnect-server:21465
       WPP_SERVER_HOST=: http://wppconnect-server:21465
       WEBHOOK_URL=: http://wpp-webhook:3005/wpp-webhook
+      HUB_BASE_URL: "http://69.62.98.33:3010"
+      HUB_API_KEY:  "TuSuperClaveSecreta"
+      VPS_NAME: $(hostname)
     depends_on:         # ← amplía
       - db
     ports:

@@ -9,6 +9,11 @@ const mysql    = require('mysql2');
 const cors     = require('cors');
 const axios    = require('axios');
 const bodyParser = require('body-parser');
+const HUB_BASE_URL = 'http://69.62.98.33:3010';   // ej. http://69.62.98.33:4000
+const HUB_API_KEY  = 'TuSuperClaveSecreta';    // ej. srv798371-key
+const os = require('os');
+const VPS_NAME = process.env.VPS_NAME || require('os').hostname();
+
 
 /* ---------- CONFIG DB ---------- */
 const pool = mysql.createPool({
@@ -27,6 +32,24 @@ const WPP_SERVER_HOST = 'http://wppconnect-server:21465';
 const SECRET_KEY      = 'THISISMYSECURETOKEN';
 const WEBHOOK_URL     = 'http://wpp-webhook:3005/wpp-webhook';
 
+/* ---------- FUNCIÓN DE SINCRONIZACIÓN ---------- */
+async function pushToHub(channelsSnapshot) {
+  if (!HUB_BASE_URL || !HUB_API_KEY) return; // si no está configurado, ignora
+  try {
+    await axios.post(`${HUB_BASE_URL}/sync`, {
+      vps: {               // puedes enviar más campos si quieres
+        name: os.hostname()      // o tu IP pública si la conoces
+      },
+      channels: channelsSnapshot
+    }, {
+      headers: { 'X-API-KEY': HUB_API_KEY }
+    });
+    console.log('[hub-sync] OK –', channelsSnapshot.length, 'channels');
+  } catch (e) {
+    console.error('[hub-sync] FAIL –', e.response?.status || e.message);
+  }
+}
+
 /* ---------- helper: token ---------- */
 async function generateTokenIfNeeded(chan) {
   if (chan.session_token) return chan.session_token;
@@ -40,6 +63,32 @@ async function generateTokenIfNeeded(chan) {
     [data.token, chan.channel_id]
   );
   return data.token;
+}
+
+async function syncAllChannels() {
+  try {
+    const channels = await queryDB("SELECT * FROM channels");
+    const serverIP = await SERVER_TAG_PROMISE;
+
+    await axios.post(`${process.env.HUB_BASE_URL}/sync`, {
+      server  : serverIP,   // ← identificador automático
+      channels
+    });
+  } catch (e) {
+    console.error("[sync] error:", e.message);
+  }
+}async function syncAllChannels() {
+  try {
+    const channels = await queryDB("SELECT * FROM channels");
+    const serverIP = await SERVER_TAG_PROMISE;
+
+    await axios.post(`${process.env.HUB_BASE_URL}/sync`, {
+      server  : serverIP,   // ← identificador automático
+      channels
+    });
+  } catch (e) {
+    console.error("[sync] error:", e.message);
+  }
 }
 
 /* ---------- Express ---------- */
@@ -193,7 +242,9 @@ app.get('/channels/:id/refresh-status', async (req,res)=>{
       await queryDB('UPDATE channels SET phone_code=NULL WHERE channel_id=?',[c.channel_id]);
       c.phone_code=null;
     }
-
+/* ----------- REPORTAR AL HUB ----------- */
+const snapshot = await queryDB('SELECT * FROM channels');
+	pushToHub(snapshot);            // ← función que definiste antes
     res.json({ message:'Estado refrescado', channel:c });
   }catch(e){
     console.error('refresh-status:',e);
