@@ -252,5 +252,15 @@ const snapshot = await queryDB('SELECT * FROM channels');
   }
 });
 
+// al final del archivo (antes del listen o después, da igual)
+const POLL_MS = process.env.HUB_POLL_MS || 30_000;   // 30 s por defecto
+setInterval(async () => {
+  try {
+    const snapshot = await queryDB('SELECT * FROM channels');
+    await pushToHub(snapshot);
+  } catch (e) {
+    console.error('[hub-sync‑poll] error:', e.message);
+  }
+}, POLL_MS);
 /* ------------------ LISTEN ------------------ */
 app.listen(3001,()=>console.log('[wpp-db-server] Port 3001'));
