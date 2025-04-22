@@ -49,6 +49,21 @@ async function pushToHub(channelsSnapshot) {
     console.error('[hub-sync] FAIL –', e.response?.status || e.message);
   }
 }
+/* ---------- AUTO‑SYNC cada 30 s ---------- */
+function startAutoSync () {
+  const INTERVAL = 30_000;          // 30 000 ms = 30 s
+  const doSync   = async () => {
+    try {
+      const snapshot = await queryDB('SELECT * FROM channels');
+      await pushToHub(snapshot);    // usa la función que ya tenías
+    } catch (err) {                 // nunca dejes caer todo el proceso
+      console.error('[auto-sync] error:', err.message);
+    }
+  };
+
+  doSync();                         // primer disparo al arrancar
+  setInterval(doSync, INTERVAL);    // siguientes cada 30 s
+}
 
 /* ---------- helper: token ---------- */
 async function generateTokenIfNeeded(chan) {
@@ -262,5 +277,8 @@ setInterval(async () => {
     console.error('[hub-sync‑poll] error:', e.message);
   }
 }, POLL_MS);
+
+startAutoSync(); // enciende el heartbeat
+
 /* ------------------ LISTEN ------------------ */
 app.listen(3001,()=>console.log('[wpp-db-server] Port 3001'));

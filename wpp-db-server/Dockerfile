@@ -1,13 +1,19 @@
 # ------------  wpp-db-server · Dockerfile  ------------
 FROM node:18-bullseye-slim
 
-# tini para apagado limpio
-RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
+# ------------------------------------------------------
+# 1) tini → apagado limpio
+# ------------------------------------------------------
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tini \
+ && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 
-# Instalar dependencias (usa lockfile si existe)
+# ------------------------------------------------------
+# 2) Dependencias  (usa lockfile si existe)
+# ------------------------------------------------------
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then \
       npm ci --omit=dev ; \
@@ -15,9 +21,17 @@ RUN if [ -f package-lock.json ]; then \
       npm install --omit=dev ; \
     fi
 
-# Copiar el resto del código
+# ------------------------------------------------------
+# 3) Copiar código + nuevo entrypoint
+# ------------------------------------------------------
 COPY . .
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
+# ------------------------------------------------------
+# 4) Puertos & arranque
+# ------------------------------------------------------
 EXPOSE 3001
-ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "index.js"]
+
+# tini (PID 1) ➜ entrypoint.sh ➜ node index.js
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/src/app/entrypoint.sh"]
