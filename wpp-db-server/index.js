@@ -10,7 +10,7 @@ const cors     = require('cors');
 const axios    = require('axios');
 const bodyParser = require('body-parser');
 const HUB_BASE_URL = 'http://69.62.98.33:3010';   // ej. http://69.62.98.33:4000
-const HUB_API_KEY  = 'TuSuperClaveSecreta';    // ej. srv798371-key
+const HUB_API_KEY  = process.env.VPS_NAME || require('os').hostname();    // ej. srv798371-key
 const os = require('os');
 const VPS_NAME = process.env.VPS_NAME || require('os').hostname();
 
