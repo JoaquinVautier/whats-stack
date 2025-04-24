@@ -4,15 +4,17 @@
  ************************************************/
 const express = require('express');
 const mysql   = require('mysql2/promise');
+const axios   = require('axios');
 
 /* ---------- Configuración DB ---------- */
 const pool = mysql.createPool({
-  host: '127.0.0.1',
-  user: 'phpmyadmin',
-  password: 'Mardelplata2021!',
+  host: 'db',
+  user: 'wpp_user',
+  password: 'wpp_pass',
   database: 'wpp_db',
   connectionLimit: 10
 });
+
 async function queryDB(sql, p = []) {
   const [rows] = await pool.query(sql, p);
   return rows;
@@ -22,8 +24,19 @@ async function queryDB(sql, p = []) {
 const app = express();
 app.use(express.json());
 
+/* ---------- Notificar inmediatamente a wpp-db-server ---------- */
+async function notifyDbServer(chan) {
+  try {
+    await axios.get(`http://wpp-db-server:3001/channels/${chan.channel_id}/refresh-status`);
+  } catch (error) {
+    console.error('Error notificando a wpp-db-server:', error.message);
+  }
+}
+
 /* ---------- Webhook ---------- */
 app.post('/wpp-webhook', async (req, res) => {
+  console.log('[WEBHOOK]', JSON.stringify(req.body).slice(0, 250));
+
   try {
     const data = req.body;
     if (!data.session) return res.sendStatus(200);
@@ -35,44 +48,49 @@ app.post('/wpp-webhook', async (req, res) => {
     );
     if (!chan) return res.sendStatus(200);
 
-    /* normaliza a minúsculas */
+    /* normaliza evento a minúsculas */
     const evento = (data.event || '').toLowerCase();
 
     /* --------- DESPACHADOR --------- */
     switch (evento) {
 
-      /* -- phoneCode: guardamos el código de 8 caracteres -- */
+      /* -- phoneCode: guardar código -- */
       case 'phonecode': {
         await queryDB(
           'UPDATE channels SET status=?, phone_code=?, status_updated_at=NOW() WHERE channel_id=?',
           ['phonecode', data.phoneCode, chan.channel_id]
         );
+        await notifyDbServer(chan);
         break;
       }
 
-      /* -- status‑find: “browserClose”, “notLogged”, etc. -- */
+      /* ------------- CAMBIOS DE ESTADO ------------- */
+      case 'session-status':
+      case 'statussession':
+      case 'session-update':
       case 'status-find': {
-  let st = (data.status || '').toLowerCase();
+        let st = (data.status || '').toLowerCase();
 
-  /* normalización unificada */
-  if (['inchat','synced','main','normal','pairing','opening']
-        .includes(st))  st = 'connected';
-  if (['browserclose','desconnectedmobile','desconnected']
-        .includes(st))  st = 'disconnected';
+        if (['inchat','synced','main','normal','pairing','opening'].includes(st))
+          st = 'connected';
+        if (['browserclose','desconnectedmobile','desconnected','timeout','qrreaderror','notlogged'].includes(st))
+          st = 'disconnected';
 
-  await queryDB(
-    'UPDATE channels SET status=?, status_updated_at=NOW() WHERE channel_id=?',
-    [st, chan.channel_id]
-  );
-  break;
-}
+        await queryDB(
+          'UPDATE channels SET status=?, status_updated_at=NOW() WHERE channel_id=?',
+          [st, chan.channel_id]
+        );
+
+        await notifyDbServer(chan);
+        break;
+      }
 
       /* -- onmessage: entrantes / salientes -- */
       case 'onmessage': {
         const from  = (data.from || '').replace('@c.us', '');
         const to    = (data.to   || '').replace('@c.us', '');
         const dir   = from === chan.phone_number ? 'OUT' : 'IN';
-        let   type  = data.type === 'chat' ? 'text' : (data.type || 'text');
+        const type  = data.type === 'chat' ? 'text' : (data.type || 'text');
         const ack   = data.ack || 0;
         const stat  = dir === 'IN' ? 'delivered' : 'sent';
 
@@ -120,14 +138,17 @@ app.post('/wpp-webhook', async (req, res) => {
       /* -- onstatechange -- */
       case 'onstatechange': {
         let newState = (data.state || '').toLowerCase();
-        if (['inchat', 'synced', 'main', 'normal', 'pairing', 'opening']
-       .includes(newState))  newState = 'connected';
-        if (newState === 'browserclose') newState = 'disconnected';
+        if (['inchat', 'synced', 'main', 'normal', 'pairing', 'opening'].includes(newState))
+          newState = 'connected';
+        if (['browserclose', 'desconnectedmobile', 'desconnected', 'timeout', 'qrreaderror', 'notlogged'].includes(newState))
+          newState = 'disconnected';
 
         await queryDB(
           'UPDATE channels SET status=?, status_updated_at=NOW() WHERE channel_id=?',
           [newState, chan.channel_id]
         );
+
+        await notifyDbServer(chan);
         break;
       }
 
@@ -150,4 +171,3 @@ app.post('/wpp-webhook', async (req, res) => {
 /* ---------- Start server ---------- */
 const PORT = 3005;
 app.listen(PORT, () => console.log(`Webhook escuchando en http://localhost:${PORT}`));
-

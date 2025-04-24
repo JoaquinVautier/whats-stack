@@ -30,16 +30,30 @@ function App() {
   const [qrImage, setQrImage] = useState(null);
   const [codeTmp, setCodeTmp] = useState('');
   const pollingRef = useRef(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   /* ----------------------------- Efectos ----------------------------- */
   useEffect(() => { fetchChannels(); }, []);
 
   const fetchChannels = async () => {
-    try {
-      const res = await axios.get(`${BASE_DB_URL}/channels`);
-      setChannels(res.data);
-    } catch { toast.error('Error al cargar canales'); }
-  };
+  try {
+    const res = await axios.get(`${BASE_DB_URL}/channels`);
+    setChannels(res.data);
+
+    // Para cada canal, actualizar estado real inmediatamente
+    res.data.forEach(async (channel) => {
+      await axios.get(`${BASE_DB_URL}/channels/${channel.channel_id}/refresh-status`);
+    });
+
+    // Luego de refrescar estados, vuelve a consultar la lista actualizada
+    setTimeout(async () => {
+      const updatedRes = await axios.get(`${BASE_DB_URL}/channels`);
+      setChannels(updatedRes.data);
+    }, 2000);  // espera 2 segundos para asegurar actualización
+  } catch {
+    toast.error('Error al cargar canales');
+  }
+};
 
   /* -------------------------- Crear canal -------------------------- */
   const createChannel = async () => {
@@ -197,21 +211,49 @@ function App() {
             <button className="modal-close" onClick={closeModal}>×</button>
 
             {modalStep === 'METHOD' && (
-              <>
-                <h2>¿Cómo iniciar la sesión?</h2>
-                <button className="btn btn-blue" style={{ margin: 6 }} onClick={() => initiateSession('qr')}>
-                  Con QR
-                </button>
-                <button className="btn btn-yellow" style={{ margin: 6 }}
-                    onClick={()=>{
-                      const phone = prompt('Número con código país, ej: 54911XXXXXXX');
-                      if (!phone) return;
-                      initiateSession('code', phone);
-                    }}>
-                  Con Código
-                </button>
-              </>
-            )}
+  <>
+    <h2>¿Cómo iniciar la sesión?</h2>
+    <button className="btn btn-blue" style={{ margin: 6 }} onClick={() => initiateSession('qr')}>
+      Con QR
+    </button>
+    <button className="btn btn-yellow" style={{ margin: 6 }} onClick={() => setModalStep('ENTER_PHONE')}>
+      Con Código
+    </button>
+  </>
+)}
+
+{modalStep === 'ENTER_PHONE' && (
+  <>
+    <h2>Ingresa el número de teléfono</h2>
+    <input
+      type="text"
+      placeholder="Número con código país, ej: 54911XXXXXXX"
+      style={{ padding: 8, marginTop: 8, width: '100%' }}
+      value={phoneNumber}
+      onChange={(e) => setPhoneNumber(e.target.value)}
+    />
+    <button
+      className="btn btn-blue"
+      style={{ marginTop: 8 }}
+      onClick={() => {
+        if (!phoneNumber) {
+          toast.error('Debes ingresar un número válido');
+          return;
+        }
+        initiateSession('code', phoneNumber);
+      }}
+    >
+      Enviar Código
+    </button>
+    <button
+      className="btn btn-gray"
+      style={{ marginTop: 8, marginLeft: 6 }}
+      onClick={() => setModalStep('METHOD')}
+    >
+      Volver
+    </button>
+  </>
+)}
 
             {modalStep === 'GENERATING' && (
               <>
@@ -271,4 +313,3 @@ function App() {
 }
 
 export default App;
-

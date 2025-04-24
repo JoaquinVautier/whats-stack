@@ -32,12 +32,14 @@ services:
       WEBHOOK_URL=: http://wpp-webhook:3005/wpp-webhook
       HUB_BASE_URL: "http://69.62.98.33:3010"
       HUB_API_KEY:  "${HOSTNAME}"
-      VPS_NAME: $(hostname)
+      VPS_NAME: "${HOSTNAME}"
     depends_on:         # ← amplía
       - db
     ports:
       - "3001:3001"
     networks: [backend]
+
+  ### ---- Emuladores Android -----------------
 
   wpp-webhook:
     build: ./wpp-webhook
@@ -87,3 +89,6 @@ volumes:
   db_data:
   tokens:
   userdata:
+  droid1_data:
+  droid2_data:
+  droid3_data:
