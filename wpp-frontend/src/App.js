@@ -258,7 +258,7 @@ function App() {
             {modalStep === 'GENERATING' && (
               <>
                 <h2>Generando conexión…</h2>
-                <img className="modal-spinner" src="https://media.giphy.com/media/3o7aCXAFrVnC0TBmWY/giphy.gif" alt="spinner" />
+                <img className="modal-spinner" src="https://cdn.pixabay.com/animation/2022/08/03/01/00/01-00-27-517_512.gif" alt="spinner" />
                 <p>Espera un momento…</p>
               </>
             )}
